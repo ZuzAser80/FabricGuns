@@ -7,9 +7,8 @@
   ],
   "client": [
     "ExampleMixin",
-    "GunRenderMixin",
-    "ModelPartAccessMixin",
-    "ModelPartGetterMixin"
+    "client.HandRenderer",
+    "client.BipedEntityModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1
