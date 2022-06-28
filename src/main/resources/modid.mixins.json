@@ -8,7 +8,10 @@
   "client": [
     "ExampleMixin",
     "client.HandRenderer",
-    "client.BipedEntityModelMixin"
+    "client.BipedEntityModelMixin",
+    "client.LivingEntitySwingHandMixin",
+    "client.BuiltinModelMixin",
+    "client.GameHudMixinThing"
   ],
   "injectors": {
     "defaultRequire": 1

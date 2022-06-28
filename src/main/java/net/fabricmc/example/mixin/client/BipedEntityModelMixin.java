@@ -2,13 +2,18 @@ package net.fabricmc.example.mixin.client;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.example.events.GunUseCallback;
+import net.fabricmc.example.item.BulletProofShieldItem;
+import net.fabricmc.example.item.GunItem;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.AnimalModel;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.ModelWithArms;
 import net.minecraft.client.render.entity.model.ModelWithHead;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.UseAction;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,36 +24,60 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BipedEntityModel.class)
 public abstract class BipedEntityModelMixin <T extends LivingEntity> extends AnimalModel<T> implements ModelWithArms, ModelWithHead {
 
-    @Shadow public ModelPart rightArm;
-    @Shadow public ModelPart leftArm;
-    @Shadow public ModelPart head;
+    //LOOK INTO THE CROSSBOW HOLDING CODE HOLY FUCK
+    //STFU
+    @Final @Shadow public ModelPart rightArm;
+    @Final @Shadow public ModelPart leftArm;
 
-    @Shadow public BipedEntityModel.ArmPose leftArmPose;
-    public boolean isSprinting = false;
+    @Shadow @Final public ModelPart head;
+    @Shadow @Final public ModelPart body;
     @Shadow public BipedEntityModel.ArmPose rightArmPose;
+    public boolean isSprinting = false;
 
     @Inject(method = "setAngles*", at = @At(value = "TAIL"))
     public void handRotation(T livingEntity, float f, float g, float h, float i, float j, CallbackInfo ci)
     {
-        if(!livingEntity.isSwimming() && livingEntity.getOffHandStack().isEmpty() && !livingEntity.hasVehicle())
+        if(!livingEntity.isSwimming() && !livingEntity.hasVehicle())
         {
             isSprinting = livingEntity.isSprinting();
-            if(livingEntity.getMainHandStack().isOf(GunUseCallback.USP))
+            ItemStack s = livingEntity.getMainHandStack();
+            int t = 0;
+            if(s.getItem() instanceof GunItem)
             {
-                this.leftArm.yaw = 0.956F;
-                this.rightArm.yaw = -0.467F;
-                this.rightArm.pitch = 300;
-                this.leftArm.pitch = 300;
-                if(isSprinting)
+                t = 1;
+            } else if(livingEntity.getOffHandStack().getItem() instanceof GunItem)
+            {
+                t = -1;
+            } else if (s.getItem() instanceof GunItem && livingEntity.getOffHandStack().getItem() instanceof GunItem)
+            {
+                t = 2;
+            }
+            if(t == 1)
+            {
+                //rightArm.yaw -= 0.79f;
+                leftArm.pitch = rightArm.pitch * 3;
+                leftArm.yaw += 0.79f;
+                if (isSprinting)
                 {
-                    this.leftArm.yaw += 0.2F;
-                    this.rightArm.yaw -= 0.01F;
-                    this.rightArm.pitch -= 100;
-                    this.leftArm.pitch -= 100;
+                    rightArm.pitch += 0.5;
                 }
-                if(livingEntity.handSwinging && livingEntity.handSwingProgress == 0)
+                if (livingEntity.isSneaking())
                 {
-                    System.out.println("leftClick detected");
+                    rightArm.pitch -= 0.5;
+                    leftArm.pitch -= 0.5;
+                }
+            } else if(t == -1)
+            {
+                rightArm.pitch = rightArm.pitch * 3;
+                rightArm.yaw += 0.79f;
+                if (isSprinting)
+                {
+                    leftArm.pitch += 0.5;
+                }
+                if (livingEntity.isSneaking())
+                {
+                    rightArm.pitch -= 0.5;
+                    leftArm.pitch -= 0.5;
                 }
             }
         }
